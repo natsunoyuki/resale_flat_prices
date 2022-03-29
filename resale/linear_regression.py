@@ -1,11 +1,13 @@
 import numpy as np
+import pandas as pd
 from scipy.optimize import linprog
 from sklearn.metrics import r2_score
 
 # Feature engineering functions.
 def month_to_G(x, start_year = 2015):
     """
-    Convert the date in "month" format to something which can be used in the linear inversion algorithm.
+    Convert the date in "month" format to something which can be used in the 
+    linear inversion algorithm.
     """
     int_date = x.year * 100 + x.month
     year, month = np.divmod(int_date, 100)

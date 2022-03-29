@@ -4,7 +4,6 @@ import json
 import geopy
 import numpy as np
 import os
-import pandas as pd
 import time
 
 # Relative imports.

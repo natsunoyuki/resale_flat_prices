@@ -3,10 +3,7 @@
 from lightgbm import LGBMRegressor
 import numpy as np
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import train_test_split
-import time
-
-from . import clean_data
+from sklearn.model_selection import train_test_split, GridSearchCV
 
 # Fixed constants for the training features and target to use.
 #FEATURES = ["lat", "lon", "flat_type_num", "storey_range_num", "age"]

@@ -2,7 +2,6 @@
 
 from datetime import datetime
 import numpy as np
-import pandas as pd
 
 # Relative imports.
 from . import geocode
