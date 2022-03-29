@@ -240,6 +240,9 @@ def clean_storey_range(df):
     return df
 
 # flat_model
+def flat_model_formatter(x):
+    return x
+
 def clean_flat_model(df):
     df["flat_model"] = df["flat_model"].apply(lambda x: x.upper())
     return df

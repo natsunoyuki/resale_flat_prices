@@ -36,6 +36,9 @@ def adjust_resale_price_per_town(df, median_prices = None, price_column = "resal
     temporal_models = {}
     
     if median_prices is None:
+        # If the median prices are not provided, calculate them using either "town" or "h3".
+        # Using "town" is much rougher, with fewer linear regression models created while "h3" provides
+        # a more localized adjustment.
         if which == "town":
             median_prices = statistics.get_monthly_median_price(df, "year_month", price_column, which)
         elif which == "h3":
