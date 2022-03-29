@@ -18,61 +18,6 @@ from . import statistics
 from . import h3_statistics
 from . import linear_regression
 
-# Price adjustment based on the median resale price.
-def build_price_adjustment_models(median_prices, price_column, location, start_year, which = "town",
-                                  vander_order = 4, model = "least_squares"):
-    """
-    Inputs
-        median_prices: DataFrame
-        price_column: string
-        location: string
-        start_year: int
-        which: string
-        vander_order: int
-        model: string
-    Outputs
-        d: array
-        G: array
-        m: array
-    """
-    ADJUSTMENT_MODELS = {"least_squares": linear_regression.least_squares,
-                         "l1_norm_inversion": linear_regression.l1_norm_inversion}
-                         
-    adjustment_model = ADJUSTMENT_MODELS.get(model, linear_regression.least_squares)
-    
-    d = median_prices[median_prices[which] == location]
-        
-    # Create linearly increasing months from "year_month".
-    d = d.assign(months = d["year_month"].apply(linear_regression.month_to_G, args = (start_year,)))
-
-    # From empirical studies, a 4th order Vander matrix appears to provide the best inversion kernel.
-    G = np.vander(d["months"].values, vander_order)
-    m = adjustment_model(G, d[price_column].values)
-    return d, G, m
-   
-def add_price_adjustment_factor(df, temporal_models, location, start_year, vander_order = 4, which = "town"):
-    """
-    Inputs
-        df: DataFrame
-        temporal_models: dict
-        location: string
-        start_year: int
-        vander_order: int
-        which: string
-    Outputs
-        tmp_df: DataFrame
-    """
-    tmp_df = df[df[which] == location]
-    tmp_df = tmp_df.assign(adj_months = tmp_df["year_month"].apply(linear_regression.month_to_G, args = (start_year,)))
-
-    start_index = np.dot(np.vander(tmp_df["adj_months"].values, vander_order), temporal_models[location]["model"])
-    max_month_value = temporal_models[location]["d"]["months"].max()
-    end_index = np.dot(np.vander([max_month_value], vander_order), temporal_models[location]["model"])
-    
-    tmp_df["adj_factor"] = end_index / start_index
-    
-    return tmp_df
-
 def adjust_resale_price_per_town(df, median_prices = None, price_column = "resale_price", vander_order = 4,
                                  model = "least_squares", which = "town"):
     """
@@ -111,6 +56,7 @@ def adjust_resale_price_per_town(df, median_prices = None, price_column = "resal
         temporal_models[location]["model"] = m.copy()
         temporal_models[location]["G"] = G.copy()
         temporal_models[location]["d"] = d.copy()
+        temporal_models[location]["r2"] = linear_regression.r2(d[price_column].values, G, m)
         
     # For each monthly resale price, calculate the required adjustment factor.
     new_df = []
@@ -126,3 +72,60 @@ def adjust_resale_price_per_town(df, median_prices = None, price_column = "resal
     new_df["{}_adj".format(price_column)] = new_df["{}_adj".format(price_column)].astype(int)
 
     return new_df, temporal_models
+
+# Price adjustment based on the median resale price.
+def build_price_adjustment_models(median_prices, price_column, location, start_year, which = "town",
+                                  vander_order = 4, model = "least_squares"):
+    """
+    Inputs
+        median_prices: DataFrame
+        price_column: string
+        location: string
+        start_year: int
+        which: string
+        vander_order: int
+        model: string
+    Outputs
+        d: array
+        G: array
+        m: array
+    """
+    ADJUSTMENT_MODELS = {"least_squares": linear_regression.least_squares,
+                         "l1_norm_inversion": linear_regression.l1_norm_inversion}
+                         
+    adjustment_model = ADJUSTMENT_MODELS.get(model, linear_regression.least_squares)
+    
+    d = median_prices[median_prices[which] == location]
+        
+    # Create linearly increasing months from "year_month".
+    d = d.assign(months = d["year_month"].apply(linear_regression.month_to_G, args = (start_year,)))
+
+    # From empirical studies, a 4th order Vander matrix appears to provide the best inversion kernel.
+    G = np.vander(d["months"].values, vander_order)
+    m = adjustment_model(G, d[price_column].values)
+    return d, G, m
+   
+def add_price_adjustment_factor(df, temporal_models, location, start_year, vander_order = 4, which = "town"):
+    """
+    Adds a price adjustment factor column to df. The adjust resale price will be the product between the original
+    resale price and this factor.
+    Inputs
+        df: DataFrame
+        temporal_models: dict
+        location: string
+        start_year: int
+        vander_order: int
+        which: string
+    Outputs
+        tmp_df: DataFrame
+    """
+    tmp_df = df[df[which] == location]
+    tmp_df = tmp_df.assign(adj_months = tmp_df["year_month"].apply(linear_regression.month_to_G, args = (start_year,)))
+
+    start_index = np.dot(np.vander(tmp_df["adj_months"].values, vander_order), temporal_models[location]["model"])
+    max_month_value = temporal_models[location]["d"]["months"].max()
+    end_index = np.dot(np.vander([max_month_value], vander_order), temporal_models[location]["model"])
+    
+    tmp_df["adj_factor"] = end_index / start_index
+    
+    return tmp_df

@@ -4,6 +4,30 @@
 import h3
 import pandas as pd
 
+def get_all_k_ring_monthly_median_price(df, date_column = "year_month", price_column = "resale_price",
+                                        k_ring_distance = 1, h3_column_name = "h3"):
+    """
+    Gets the k-ring median price for all unique H3 indices in the DataFrame.
+    Inputs
+        df: DataFrame
+        date_column: string (optional)
+        price_column: string (optional)
+        k_ring_distance: int (optional)
+        h3_column_name: string (optional)
+    Outputs
+        median_price: DataFrame
+    """
+    h3_indices = df[h3_column_name].unique() # Get all unique H3 cell indices in df.
+    h3_median_prices = []
+    
+    for i in range(len(h3_indices)):
+        h3_median_price = get_k_ring_monthly_median_price(df, h3_indices[i], date_column, price_column,
+                                                          k_ring_distance, h3_column_name)
+        h3_median_price[h3_column_name] = h3_indices[i]
+        h3_median_prices.append(h3_median_price)
+        
+    return pd.concat(h3_median_prices, ignore_index = True) # This is the fast way of DataFrame concatenation.
+
 def get_k_ring_monthly_median_price(df, h3_index, date_column = "year_month", price_column = "resale_price",
                                     k_ring_distance = 1, h3_column_name = "h3"):
     """
@@ -19,37 +43,20 @@ def get_k_ring_monthly_median_price(df, h3_index, date_column = "year_month", pr
     Outputs
         median_price: DataFrame
     """
-    k_ring_indices = sorted(list(h3.k_ring(h3_index)))
+    # 1. Get the k_ring of cells within k_ring_distance around the cell of interest.
+    k_ring_indices = sorted(list(h3.k_ring(h3_index, k = k_ring_distance)))
+    
+    # 2. Get all rows of data with H3 index in the list of k_ring cells obtained above.
     df = df[df[h3_column_name].isin(k_ring_indices)][[date_column, price_column]]
+    
+    # 3. Obtain the median price of all those rows of data.
     median_price = df.groupby([date_column]).median().reset_index()
     median_price = median_price.sort_values(date_column)
     return median_price
-    
-def get_all_k_ring_monthly_median_price(df, date_column = "year_month", price_column = "resale_price",
-                                        k_ring_distance = 1, h3_column_name = "h3"):
-    """
-    Gets the k-ring median price for all unique H3 indices in the data.
-    Inputs
-        df: DataFrame
-        date_column: string (optional)
-        price_column: string (optional)
-        k_ring_distance: int (optional)
-        h3_column_name: string (optional)
-    Outputs
-        median_price: DataFrame
-    """
-    h3_indices = df[h3_column_name].unique()
-    h3_median_prices = []
-    
-    for i in range(len(h3_indices)):
-        h3_median_price = get_k_ring_monthly_median_price(df, h3_indices[i], date_column, price_column, k_ring_distance,
-                                                          h3_column_name)
-        h3_median_price[h3_column_name] = h3_indices[i]
-        h3_median_prices.append(h3_median_price)
-        
-    return pd.concat(h3_median_prices, ignore_index = True)
 
-# The following H3 cell plotting functions are taken from:
+
+
+# The following H3 k_ring smoothing functions are taken from:
 # https://github.com/uber/h3-py-notebooks/blob/master/notebooks/unified_data_layers.ipynb
 def kring_smoothing(df, hex_col, metric_col, k):
     dfk = df[[hex_col]]

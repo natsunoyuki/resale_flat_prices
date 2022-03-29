@@ -11,7 +11,8 @@ import time
 from . import load_data, clean_data, onemapclient
 
 # Fixed constants indicating the location of the geocoded address json file.
-DIR = "../processed data/"
+CURR_PATH = os.path.dirname(__file__)
+DIR = os.path.join(CURR_PATH, "../processed data/")
 GEOCODED_ADDRESSES = "geocoded_addresses.json"
 
 # Main function to create a json file of geocoded addresses in Singapore.
@@ -56,7 +57,13 @@ def get_unique_address(df):
     return df["address"].unique()
 
 def load_geocoded_addresses_json(dir = DIR, json_file = GEOCODED_ADDRESSES):
-    # Load the json file containing the geocoded addresses.
+    """
+    Load the json file containing the geocoded addresses.
+    Inputs
+        dir, json_file: string
+    Outputs
+        address_dict: dict
+    """
     if json_file in os.listdir(dir):
         with open(dir + json_file) as fp:
             address_dict = json.load(fp)

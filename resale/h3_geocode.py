@@ -27,7 +27,9 @@ def plot_hexagons(hexagons):
     m = visualize_hexagons(hexagons)
     display(m)
 
-# The following functions are taken from:
+
+
+# The following H3 visualization functions are taken from:
 # https://github.com/uber/h3-py-notebooks/blob/master/notebooks/usage.ipynb
 def visualize_hexagons(hexagons, color = "red", folium_map = None):
     """

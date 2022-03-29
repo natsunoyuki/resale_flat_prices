@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.optimize import linprog
+from sklearn.metrics import r2_score
 
+# Feature engineering functions.
 def month_to_G(x, start_year = 2015):
     """
     Convert the date in "month" format to something which can be used in the linear inversion algorithm.
@@ -16,6 +18,7 @@ def G_to_month(x, start_year = 2015):
     start_date = pd.to_datetime("{}-01-01".format(start_year))
     return start_date + pd.DateOffset(months = x - 1)
 
+# Linear regression models.
 def least_squares(G, d):
     """
     Linear least squares linear inversion.
@@ -93,3 +96,7 @@ def l1_norm_inversion(G, d, sd = None):
     # and calculate the model parameters using m = m1 - m2.
     mest_l1 = res['x'][:M] - res['x'][M:2*M]
     return mest_l1
+
+# Metrics
+def r2(d, G, m):
+    return r2_score(d, np.dot(G, m))

@@ -20,19 +20,34 @@ def clean_data(df):
     # 2. Categorize "town" numerically.
     df = clean_town(df)
     
-    # 3.
+    # 3. Clean up the abbreviations in "street_name".
     df = clean_street_name(df)
     
-    # 4. 
+    # 4. Use "street_name" and "block" to make "address".
     df = make_address(df)
+    
+    # 5. Categorize "flat_type" numerically.
     df = clean_flat_type(df)
+    
+    # 6. Convert "storey_range" from string to numerical values.
     df = clean_storey_range(df)
+    
+    # 7. Categorize "flat_model" numerically.
     df = clean_flat_model(df)
+    
+    # 8. Normalize "floor_area_sqm".
     df = clean_floor_area_sqm(df)
+    
+    # 9. Get "age".
+    df = get_age(df, CURRENT_YEAR)
+    
+    # 10. Obtain latitude and longitude, and normalize them.
     df = get_latitude_and_longitude(df)
     df = clean_latitude_and_longitude(df)
     return df
-
+    
+    
+    
 # Dependent functions for each feature are below.
 
 # town
@@ -231,9 +246,11 @@ def clean_flat_model(df):
 
 # floor_area_sqm
 def sqm_to_sqft(x):
+    # Convert square metres to square feet.
     return x * 10.7639
     
 def sqft_to_sqm(x):
+    # Convert square feet to square metres.
     return x / 10.7639
 
 def floor_area_scaler(x, xmin, xmax):
@@ -258,8 +275,12 @@ def get_price_per_sqm(df):
 def age_scaler(x, xmin, xmax):
     return (x - xmin) / (xmax - xmin)
 
-def clean_lease_commence_date(df, current_year = CURRENT_YEAR):
+def get_age(df, current_year = CURRENT_YEAR):
     df["age"] = current_year - df["lease_commence_date"]
+    return df
+
+def clean_lease_commence_date(df, current_year = CURRENT_YEAR):
+    df = get_age(df, current_year)
 
     # Scale the age to [0, 1]
     min_age = df["age"].min()

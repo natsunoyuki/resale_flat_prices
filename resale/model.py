@@ -6,11 +6,14 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 import time
 
+from . import clean_data
+
 # Fixed constants for the training features and target to use.
 #FEATURES = ["lat", "lon", "flat_type_num", "storey_range_num", "age"]
-FEATURES = ["latitude", "longitude", ]
+FEATURES = ["latitude", "longitude", "flat_type_num", "storey_range_num", "age"]
 TARGET = "price_per_sqm_adj"
 
+# Functions to scale the target variable.
 def y_scaler(x, base = 10):
     """
     Scale the resale price.
@@ -31,6 +34,7 @@ def y_descaler(y, base = 10):
         y = 10 ** y
     return y
 
+# Functions to create X and y.
 def make_Xy(df, features = FEATURES, target = TARGET, scale_y = False, base = 10):
     """
     Inputs
@@ -52,9 +56,11 @@ def make_Xy(df, features = FEATURES, target = TARGET, scale_y = False, base = 10
         
     return X.values, y.values
 
+# Functions to train the model and perform grid search cross validation if needed.
 def train_model(X, y,
                 grid_search = False,
                 grid_search_params = {"n_estimators" : [100, 200, 300, 400, 500]},
+                model = None, model_params = None,
                 random_state = None):
     """
     Train a machine learning model to predict resale flat prices.
@@ -72,7 +78,8 @@ def train_model(X, y,
         # Use the best_estimator_ as the prediction model.
         model = grid_search.best_estimator_
     else:
-        pass
+        if model is None:
+            model = lightgbm.LGBMRegressor(**model_params)
         
     
     
@@ -108,6 +115,7 @@ def grid_search_cv(X, y, grid_search_params = {"n_estimators" : [100, 200, 300, 
         
     return grid_search
 
+# Functions to evaluate the model.
 def evaluate_model(model, X_train, X_test, y_train, y_test, base = 10):
     y_train_pred = model.predict(X_train)
     y_test_pred = model.predict(X_test)
