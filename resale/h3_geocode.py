@@ -1,7 +1,9 @@
-# h3-py: Uber’s H3 Hexagonal Hierarchical Geospatial Indexing System in Python
+# h3-py: Uber's H3 Hexagonal Hierarchical Geospatial Indexing System in Python
 # https://uber.github.io/h3-py/intro.html
 
 import h3
+from IPython.display import display
+import folium
 
 # Constants involving H3 cell resolution.
 # A resolution of 8 results in a hexagonal cell of roughly 1 km2 area and 0.5 km edge length.
