@@ -35,14 +35,14 @@ def clean_data(df):
     df = clean_flat_model(df)
     
     # 8. Normalize "floor_area_sqm".
-    df = clean_floor_area_sqm(df)
+    #df = clean_floor_area_sqm(df)
     
     # 9. Get "age".
     df = get_age(df, CURRENT_YEAR)
     
     # 10. Obtain latitude and longitude, and normalize them.
     df = get_latitude_and_longitude(df)
-    df = clean_latitude_and_longitude(df)
+    #df = clean_latitude_and_longitude(df)
     return df
     
     
@@ -261,7 +261,8 @@ def floor_area_scaler(x, xmin, xmax):
 def clean_floor_area_sqm(df):
     min_floor_area = df["floor_area_sqm"].min()
     max_floor_area = df["floor_area_sqm"].max()
-    df["floor_area_norm"] = df["floor_area_sqm"].apply(floor_area_scaler, args = (min_floor_area, max_floor_area))
+    df["floor_area_norm"] = df["floor_area_sqm"].apply(floor_area_scaler, 
+                                                       args = (min_floor_area, max_floor_area))
     return df
 
 def get_price_per_sqm(df):

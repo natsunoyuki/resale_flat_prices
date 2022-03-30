@@ -1,6 +1,6 @@
 # Not all towns are created equal. Some towns have seen an appreciation in 
 # prices, while others have not.
-# Some towns have stable prices, while others have fluctuation prices.
+# Some towns have stable prices, while others have fluctuating prices.
 
 # We should account for the temporal drift in the resale prices. Perhaps one 
 # way to do this is to fit a simple regression model to model the increase in 
@@ -23,6 +23,7 @@ from . import linear_regression
 
 def adjust_resale_price_per_town(df, median_prices = None, 
                                  price_column = "resale_price", 
+                                 end_year = None,
                                  vander_order = 4,
                                  model = "least_squares", 
                                  which = "town"):
@@ -34,8 +35,10 @@ def adjust_resale_price_per_town(df, median_prices = None,
         df: DataFrame
         median_prices: DataFrame
         price_column: string
-        vander_order: int
-        model: string
+        end_year: int or string (optional)
+        vander_order: int (optinal)
+        model: string (optional)
+        which: string (optional)
     Outputs
         new_df: DataFrame
         temporal_models: dict
@@ -43,11 +46,13 @@ def adjust_resale_price_per_town(df, median_prices = None,
     temporal_models = {}
     
     if median_prices is None and which == "town":
+        # Get median prices aggregated by "town".
         median_prices = statistics.get_monthly_median_price(df, 
                                                             "year_month", 
                                                             price_column, 
                                                             which)
     elif median_prices is None and which == "h3":
+        # Or get the median prices aggregated by "h3".
         median_prices = h3_statistics.get_all_k_ring_monthly_median_price(df = df, 
                                                                           date_column = "year_month",
                                                                           price_column = price_column,
@@ -57,7 +62,7 @@ def adjust_resale_price_per_town(df, median_prices = None,
     start_year = df["year"].min()
     
     # Build a different linear regression model to update the historical prices 
-    # for each town.
+    # for each location.
     for location in sorted(df[which].unique()):
         d, G, m = build_price_adjustment_models(median_prices = median_prices, 
                                                 price_column = price_column,
@@ -80,6 +85,7 @@ def adjust_resale_price_per_town(df, median_prices = None,
                                              temporal_models = temporal_models, 
                                              location = location,
                                              start_year = start_year, 
+                                             end_year = None,
                                              vander_order = vander_order, 
                                              which = which)
         new_df.append(tmp_df)
@@ -93,17 +99,18 @@ def adjust_resale_price_per_town(df, median_prices = None,
     return new_df, temporal_models
 
 # Price adjustment based on the median resale price.
-def build_price_adjustment_models(median_prices, price_column, location, start_year, which = "town",
-                                  vander_order = 4, model = "least_squares"):
+def build_price_adjustment_models(median_prices, price_column, location, start_year, end_year = None,
+                                  which = "town", vander_order = 4, model = "least_squares"):
     """
     Inputs
         median_prices: DataFrame
         price_column: string
         location: string
         start_year: int
-        which: string
-        vander_order: int
-        model: string
+        end_year: int or string (optional)
+        which: string (optional)
+        vander_order: int (optional)
+        model: string (optional)
     Outputs
         d: array
         G: array
@@ -117,7 +124,8 @@ def build_price_adjustment_models(median_prices, price_column, location, start_y
     d = median_prices[median_prices[which] == location]
         
     # Create linearly increasing months from "year_month".
-    d = d.assign(months = d["year_month"].apply(linear_regression.month_to_G, args = (start_year,)))
+    d = d.assign(months = d["year_month"].apply(linear_regression.month_to_G, 
+                                                args = (start_year,)))
 
     # From empirical studies, a 4th order Vander matrix appears to provide the 
     # best inversion kernel. Note that a 4th order Vander matrix results in a 
@@ -127,7 +135,7 @@ def build_price_adjustment_models(median_prices, price_column, location, start_y
     m = adjustment_model(G, d[price_column].values)
     return d, G, m
    
-def add_price_adjustment_factor(df, temporal_models, location, start_year, 
+def add_price_adjustment_factor(df, temporal_models, location, start_year, end_year = None,
                                 vander_order = 4, which = "town"):
     """
     Adds a price adjustment factor column to df. The adjust resale price will 
@@ -137,8 +145,9 @@ def add_price_adjustment_factor(df, temporal_models, location, start_year,
         temporal_models: dict
         location: string
         start_year: int
-        vander_order: int
-        which: string
+        end_year: int or string (optional)
+        vander_order: int (optional)
+        which: string (optional)
     Outputs
         tmp_df: DataFrame
     """
@@ -151,7 +160,10 @@ def add_price_adjustment_factor(df, temporal_models, location, start_year,
     start_index = np.dot(np.vander(tmp_df["adj_months"].values, vander_order), 
                          temporal_models[location]["model"])
     
-    max_month_value = temporal_models[location]["d"]["months"].max()
+    if end_year is None:
+        max_month_value = temporal_models[location]["d"]["months"].max()
+    elif end_year == "next month":
+        max_month_value = temporal_models[location]["d"]["months"].max() + 1
     
     # end_index is the predictions for the max month resale price. This is a 
     # single value!
