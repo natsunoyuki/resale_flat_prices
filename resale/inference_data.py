@@ -4,7 +4,6 @@ import numpy as np
 
 from . import clean_data
 from . import geocode
-from . import model
 
 # Fixed constants.
 ADDRESS_DICT = geocode.load_geocoded_addresses_json()

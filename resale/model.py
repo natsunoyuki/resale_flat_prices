@@ -76,7 +76,7 @@ def train_model(X, y,
         model = grid_search.best_estimator_
     else:
         if model is None:
-            model = lightgbm.LGBMRegressor(**model_params)
+            model = LGBMRegressor(**model_params)
         
     
     
@@ -119,7 +119,7 @@ def evaluate_model(model, X_train, X_test, y_train, y_test, base = 10):
     
     train_mae = mean_absolute_error(y_descaler(y_train, base), y_descaler(y_train_pred, base))
     test_mae = mean_absolute_error(y_descaler(y_test, base), y_descaler(y_test_pred, base))
-    print("Train mae : {}, test mae : {}.".format(int(train_mae), int(test_mae)))
+    print("Train mae: {}, test mae: {}.".format(int(train_mae), int(test_mae)))
 
     train_mse = np.sqrt(mean_squared_error(y_descaler(y_train, base), y_descaler(y_train_pred, base)))
     test_mse = np.sqrt(mean_squared_error(y_descaler(y_test, base), y_descaler(y_test_pred, base)))
@@ -127,4 +127,4 @@ def evaluate_model(model, X_train, X_test, y_train, y_test, base = 10):
 
     train_r2 = r2_score(y_train, y_train_pred)
     test_r2 = r2_score(y_test, y_test_pred)
-    print("Test R2   : {:.3f}, test R2  : {:.3f}.".format(train_r2, test_r2))
+    print("Test R2: {:.3f}, test R2: {:.3f}.".format(train_r2, test_r2))

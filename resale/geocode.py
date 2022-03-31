@@ -66,7 +66,7 @@ def load_geocoded_addresses_json(dir = DIR, json_file = GEOCODED_ADDRESSES):
     if json_file in os.listdir(dir):
         with open(dir + json_file) as fp:
             address_dict = json.load(fp)
-        print("Geocoded addresses: {}.".format(len(address_dict)))
+        #print("Geocoded addresses: {}.".format(len(address_dict)))
     else:
         address_dict = {}
     return address_dict

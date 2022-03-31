@@ -3,19 +3,43 @@ import pandas as pd
 from scipy.optimize import linprog
 from sklearn.metrics import r2_score
 
+# Helper functions.
+def diff_month(d1, d2):
+    """
+    Gets the number of months between two datetimes.
+    Inputs
+        d1, d2: datetime
+    Outputs
+        months: int
+    """
+    return (d1.year - d2.year) * 12 + (d1.month - d2.month)
+
 # Feature engineering functions.
-def month_to_G(x, start_year = 2015):
+def month_to_G(year_month, start_year_month):
     """
     Convert the date in "month" format to something which can be used in the 
     linear inversion algorithm.
+    Inputs
+        year_month: datetime
+        start_year_month: datetime
+    Oututs
+        months: int
     """
-    int_date = x.year * 100 + x.month
-    year, month = np.divmod(int_date, 100)
-    return (year - start_year) * 12 + month
+    #int_date = x.year * 100 + x.month
+    #year, month = np.divmod(int_date, 100)
+    #return (year - start_year) * 12 + month
+    
+    # Don't forget the "+1". We count from 1.
+    return diff_month(year_month, start_year_month) + 1
 
 def G_to_month(x, start_year = 2015):
     """
     Convert data from the linear inversion format back to the month format.
+    Inputs
+        x: int
+        start_year: int
+    Outputs
+        year_month: datetime
     """
     start_date = pd.to_datetime("{}-01-01".format(start_year))
     return start_date + pd.DateOffset(months = x - 1)

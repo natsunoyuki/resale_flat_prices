@@ -26,7 +26,8 @@ def get_all_k_ring_monthly_median_price(df, date_column = "year_month", price_co
         h3_median_price[h3_column_name] = h3_indices[i]
         h3_median_prices.append(h3_median_price)
         
-    return pd.concat(h3_median_prices, ignore_index = True) # This is the fast way of DataFrame concatenation.
+    # This is the fast way of DataFrame concatenation.
+    return pd.concat(h3_median_prices, ignore_index = True) 
 
 def get_k_ring_monthly_median_price(df, h3_index, date_column = "year_month", price_column = "resale_price",
                                     k_ring_distance = 1, h3_column_name = "h3"):
@@ -52,6 +53,7 @@ def get_k_ring_monthly_median_price(df, h3_index, date_column = "year_month", pr
     # 3. Obtain the median price of all those rows of data.
     median_price = df.groupby([date_column]).median().reset_index()
     median_price = median_price.sort_values(date_column)
+    median_price["N"] = len(df)
     return median_price
 
 

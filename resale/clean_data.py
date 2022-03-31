@@ -17,7 +17,7 @@ def clean_data(df):
     df = get_price_per_sqm(df)
     
     # 2. Categorize "town" numerically.
-    df = clean_town(df)
+    #df = clean_town(df)
     
     # 3. Clean up the abbreviations in "street_name".
     df = clean_street_name(df)
