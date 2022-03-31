@@ -1,5 +1,7 @@
 # Singapore Resale Flat Prices
 
+Using what is also known as Abominable Intelligence, predict resale prices for public properties in Singapore.
+
 ## OneMapAuthentication
 OneMapSg authentication module downloaded directly from <a href = "https://github.com/sla-onemap/OneMap2-Authentication-Modules/tree/master/OneMap2-Authentication-Module_for_MacOS" target = "_blank">OneMap's GitHub Repository</a>.
 
