@@ -172,7 +172,7 @@ def adjust_resale_price(df,
     temporal_models["G"] = G.copy()
     temporal_models["model"] = m.copy()
     
-    tmp_df = add_price_adjustment_factor(df, temporal_models = None, location = None, 
+    tmp_df = add_price_adjustment_factor(df, temporal_models = temporal_models, location = None, 
                                          start_year_month = start_year_month, 
                                          end_year_month = end_year_month, 
                                          vander_order = vander_order, which = None)
