@@ -21,14 +21,14 @@ from . import statistics
 from . import h3_statistics
 from . import linear_regression
 
-def adjust_resale_price_per_town(df, median_prices = None, 
-                                 price_column = "resale_price", 
-                                 start_year_month = None,
-                                 next_month = False,
-                                 vander_order = 4,
-                                 model = "least_squares", 
-                                 which = "town",
-                                 kwargs = {}):
+def adjust_resale_price_by_location(df, median_prices = None, 
+                                    price_column = "resale_price", 
+                                    start_year_month = None,
+                                    next_month = False,
+                                    vander_order = 4,
+                                    model = "least_squares", 
+                                    which = "town",
+                                    kwargs = {}):
     """
     Adjust the resale price per town to account for temporal changes.
     This is to ensure that all historical data are "updated" to the 

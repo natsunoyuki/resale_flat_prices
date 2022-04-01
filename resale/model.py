@@ -99,7 +99,8 @@ def grid_search_cv(X, y, grid_search_params = {"n_estimators" : [100, 200, 300, 
     Outputs
         grid_search: GridSearchCV
     """
-    model = LGBMRegressor(num_leaves = 2 ** 5, max_depth = 5, objective = "huber", random_state = random_state)
+    model = LGBMRegressor(num_leaves = 2 ** 5, max_depth = 5, objective = "huber", 
+                          random_state = random_state)
     grid_search = GridSearchCV(model, param_grid = grid_search_params, cv = cv)
     
     if time == True:
@@ -117,12 +118,16 @@ def evaluate_model(model, X_train, X_test, y_train, y_test, base = 10):
     y_train_pred = model.predict(X_train)
     y_test_pred = model.predict(X_test)
     
-    train_mae = mean_absolute_error(y_descaler(y_train, base), y_descaler(y_train_pred, base))
-    test_mae = mean_absolute_error(y_descaler(y_test, base), y_descaler(y_test_pred, base))
+    train_mae = mean_absolute_error(y_descaler(y_train, base), 
+                                    y_descaler(y_train_pred, base))
+    test_mae = mean_absolute_error(y_descaler(y_test, base), 
+                                   y_descaler(y_test_pred, base))
     print("Train mae: {}, test mae: {}.".format(int(train_mae), int(test_mae)))
 
-    train_mse = np.sqrt(mean_squared_error(y_descaler(y_train, base), y_descaler(y_train_pred, base)))
-    test_mse = np.sqrt(mean_squared_error(y_descaler(y_test, base), y_descaler(y_test_pred, base)))
+    train_mse = np.sqrt(mean_squared_error(y_descaler(y_train, base), 
+                                           y_descaler(y_train_pred, base)))
+    test_mse = np.sqrt(mean_squared_error(y_descaler(y_test, base), 
+                                          y_descaler(y_test_pred, base)))
     print("Train rmse: {}, test rmse: {}.".format(int(train_mse), int(test_mse)))
 
     train_r2 = r2_score(y_train, y_train_pred)
