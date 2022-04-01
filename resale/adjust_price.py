@@ -177,8 +177,11 @@ def adjust_resale_price(df,
                                          end_year_month = end_year_month, 
                                          vander_order = vander_order, which = None)
     
+    # Use the adjustment factor to calculate the adjusted resale price.
+    tmp_df["{}_adj".format(price_column)] = tmp_df[price_column] * tmp_df["adj_factor"]
+    tmp_df["{}_adj".format(price_column)] = tmp_df["{}_adj".format(price_column)].astype(int)
     return tmp_df, temporal_models
-
+    
 # Price adjustment based on the median resale price.
 def build_price_adjustment_model(median_prices, price_column, location, start_year_month, 
                                   which = "town", vander_order = 4, model = "least_squares"):
