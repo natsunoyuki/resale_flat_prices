@@ -21,7 +21,8 @@ from . import statistics
 from . import h3_statistics
 from . import linear_regression
 
-def adjust_resale_price_by_location(df, median_prices = None, 
+def adjust_resale_price_by_location(df, 
+                                    median_prices = None, 
                                     price_column = "resale_price", 
                                     start_year_month = None,
                                     next_month = False,
@@ -118,6 +119,66 @@ def adjust_resale_price_by_location(df, median_prices = None,
 
     return new_df, temporal_models
 
+def adjust_resale_price(df, 
+                        median_prices = None, 
+                        price_column = "resale_price", 
+                        start_year_month = None,
+                        next_month = False,
+                        vander_order = 4,
+                        model = "least_squares"):
+    """
+    Adjust the resale price per town to account for temporal changes.
+    This is to ensure that all historical data are "updated" to the 
+    latest prices.
+    Inputs
+        df: DataFrame
+        median_prices: DataFrame
+        price_column: string
+        start_year_month: datetime (optional)
+        next_month: bool (optional)
+        vander_order: int (optinal)
+        model: string (optional)
+    Outputs
+        new_df: DataFrame
+        temporal_models: dict
+    """
+    
+    # If median_prices is not provided, perform the require computations.
+    if median_prices is None:
+        # Get median prices without any aggregation.
+        median_prices = statistics.get_monthly_median_price(df, "year_month", price_column)
+    
+    # Obtain the start year in the DataFrame. This is an int e.g. 2015.
+    #start_year = df["year"].min()
+    
+    # This on the other hand is a datetime object.
+    if start_year_month is None:
+        start_year_month = df["year_month"].min()
+        
+    if next_month == True:
+        # Next month.
+        end_year_month = df["year_month"].max() + pd.DateOffset(months = 1)
+    else:
+        # Current month.
+        end_year_month = df["year_month"].max()
+    
+    d, G, m = build_price_adjustment_model(median_prices, price_column, location = None, 
+                                           start_year_month = start_year_month,
+                                           which = None, vander_order = vander_order, 
+                                           model = model)
+    
+    temporal_models = {}
+    temporal_models["d"] = d.copy()
+    temporal_models["G"] = G.copy()
+    temporal_models["model"] = m.copy()
+    
+    tmp_df = add_price_adjustment_factor(df, temporal_models = None, location = None, 
+                                         start_year_month = start_year_month, 
+                                         end_year_month = end_year_month, 
+                                         vander_order = vander_order, which = None)
+    
+    return tmp_df, temporal_models
+
 # Price adjustment based on the median resale price.
 def build_price_adjustment_model(median_prices, price_column, location, start_year_month, 
                                   which = "town", vander_order = 4, model = "least_squares"):
@@ -140,7 +201,12 @@ def build_price_adjustment_model(median_prices, price_column, location, start_ye
                          
     adjustment_model = ADJUSTMENT_MODELS.get(model, linear_regression.least_squares)
     
-    d = median_prices[median_prices[which] == location]
+    if which is None:
+        # No location in data.
+        d = median_prices.copy()
+    else:
+        # Extract the data for a particular location.
+        d = median_prices[median_prices[which] == location]
         
     # Create linearly increasing months using "year_month", calculated from
     # the start date. Note that "year_month" is a datetime object.
@@ -155,9 +221,13 @@ def build_price_adjustment_model(median_prices, price_column, location, start_ye
     m = adjustment_model(G, d[price_column].values)
     return d, G, m
    
-def add_price_adjustment_factor(df, temporal_models, location, 
-                                start_year_month, end_year_month,
-                                vander_order = 4, which = "town"):
+def add_price_adjustment_factor(df, 
+                                temporal_models, 
+                                location, 
+                                start_year_month, 
+                                end_year_month,
+                                vander_order = 4, 
+                                which = "town"):
     """
     Adds a price adjustment factor column to df. The adjust resale price will 
     be the product between the original resale price and this factor.
@@ -173,18 +243,23 @@ def add_price_adjustment_factor(df, temporal_models, location,
         tmp_df: DataFrame
     """
     # Extract for a particular location.
-    tmp_df = df[df[which] == location]
+    if which is None:
+        tmp_df = df.copy()
+        model = temporal_models["model"]
+    else:
+        tmp_df = df[df[which] == location]
+        model = temporal_models[location]["model"]
     
     # Calculate the number of months from the start date to the sales date.
     months_from_start = tmp_df["year_month"].apply(linear_regression.month_to_G, 
                                                    args = (start_year_month,))
+    
     # Less buggy way of adding a column of values to a DataFrame:
     tmp_df = tmp_df.assign(adj_months = months_from_start)
     
     # start_index is the predictions for the original resale price. This is 
     # an array of time series values.
-    start_index = np.dot(np.vander(tmp_df["adj_months"].values, vander_order), 
-                         temporal_models[location]["model"])
+    start_index = np.dot(np.vander(tmp_df["adj_months"].values, vander_order), model)
     
     target_month = linear_regression.month_to_G(end_year_month, start_year_month)
     
@@ -193,8 +268,7 @@ def add_price_adjustment_factor(df, temporal_models, location,
     
     # end_index is the predictions of the resale price for the targeted month.
     # This targeted month is either the current month or the next month.
-    end_index = np.dot(np.vander([target_month], vander_order), 
-                       temporal_models[location]["model"])
+    end_index = np.dot(np.vander([target_month], vander_order), model)
     
     # By taking the ratio between the end_index and the start_index, we can
     # get an adjustment factor to be multiplied to the individual resale prices

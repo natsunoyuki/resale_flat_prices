@@ -1,6 +1,7 @@
 # Calculate statistics such as the monthly mean resale price from data.
 
-def get_monthly_median_price(df, date_column = "year_month", price_column = "resale_price", groupby_column = None):
+def get_monthly_median_price(df, date_column = "year_month", price_column = "resale_price", 
+                             groupby_column = None):
     """
     Get monthly median price for the entire dataset.
     Inputs
@@ -20,10 +21,10 @@ def get_monthly_median_price(df, date_column = "year_month", price_column = "res
         
     median_price = df[want].groupby(groupby_column).median().reset_index()
     median_price = median_price.sort_values(date_column)
-    median_price["N"] = len(df)
     return median_price
 
-def get_monthly_mean_price(df, date_column = "year_month", price_column = "resale_price", groupby_column = None):
+def get_monthly_mean_price(df, date_column = "year_month", price_column = "resale_price", 
+                           groupby_column = None):
     """
     Get monthly mean price for the entire dataset.
     Inputs
