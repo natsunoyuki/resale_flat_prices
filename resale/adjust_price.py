@@ -141,6 +141,7 @@ def adjust_resale_price_globally(df,
     Outputs
         new_df: DataFrame
         temporal_models: dict
+    TODO: merge this function with the function above! There should not be two functions!
     """
     
     # If median_prices is not provided, perform the require computations.

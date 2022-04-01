@@ -16,9 +16,11 @@ BASE_PATH = os.path.join(CURR_PATH, "../raw data/") # Relative file path.
 
 # Fixed constants for saving the processed data.
 OUT_FILE = os.path.join(CURR_PATH, "../processed data/consolidated-resale-flat-prices.csv.zip")
+RPI_FILE = os.path.join(CURR_PATH, "../processed data/resale_price_index.csv.zip")
 
 # Columns to keep from the raw data.
-COLS_TO_KEEP = ["month", "town", "flat_type", "block", "street_name", "storey_range", "floor_area_sqm", "flat_model",
+COLS_TO_KEEP = ["month", "town", "flat_type", "block", "street_name", 
+                "storey_range", "floor_area_sqm", "flat_model",
                 "lease_commence_date", "resale_price"]
 
 def process_raw_resale_flat_price_data(base_path = BASE_PATH, cols_to_keep = COLS_TO_KEEP):
@@ -54,7 +56,31 @@ def process_raw_resale_flat_price_data(base_path = BASE_PATH, cols_to_keep = COL
     
     return data
     
-def data_to_csv(data, out_file = OUT_FILE, compression = "zip"):
+def process_raw_resale_price_index_data(base_path = BASE_PATH):
+    """
+    Process and quarterly resale price index into monthly values.
+    The original resale price index is given quarterly. We increase the resolution
+    of the data to make it monthly.
+    """
+    file_name = "housing-and-development-board-resale-price-index-1q2009-100-quarterly.csv"
+    rpi = pd.read_csv(os.path.join(base_path, file_name))
+    rpi["quarter"] = pd.to_datetime(rpi["quarter"])
+    
+    start_year = rpi["quarter"].min().year
+    start_month = rpi["quarter"].min().month
+    end_year = rpi["quarter"].max().year
+    end_month = rpi["quarter"].max().month + 2
+    dr = make_monthly_date_range(start_year, start_month, end_year, end_month)
+    
+    rpi = pd.merge(left = dr, right = rpi, 
+                   left_on = "year_month", right_on = "quarter", 
+                   how = "left")
+    
+    rpi = rpi.drop(["quarter"], axis = 1).fillna(method = "ffill")
+    
+    return rpi
+
+def data_to_csv(data, out_file, compression = "zip"):
     """
     Output processed data to disk
     Inputs
@@ -63,10 +89,37 @@ def data_to_csv(data, out_file = OUT_FILE, compression = "zip"):
     """
     data.to_csv(out_file, index = False, compression = compression)
     
+def make_monthly_date_range(start_year = 1990, start_month = 1, 
+                            end_year = 2021, end_month = 7, 
+                            include_final_month = True, 
+                            column_name = "year_month"):
+    dr = []
+    
+    while (start_year != end_year) or (start_month != end_month):
+        next_date = pd.to_datetime("{}-{}-01".format(str(start_year), str(start_month).zfill(2)))
+        dr.append(next_date)
+        
+        start_month = start_month + 1
+        if start_month > 12:
+            start_month = 1
+            start_year = start_year + 1
+    
+    if include_final_month == True:
+        next_date = pd.to_datetime("{}-{}-01".format(str(start_year), str(start_month).zfill(2)))
+        dr.append(next_date)
+
+    return pd.DataFrame(dr, columns = [column_name])
+    
 if __name__ == "__main__":
-    print("Loading and processing raw data .csv files...")
+    print("Loading and processing raw resale price data .csv files...")
     data = process_raw_resale_flat_price_data(BASE_PATH, COLS_TO_KEEP)
-    print("Final merged shape: {}.".format(data.shape))
+    print("Final resale price data shape: {}.".format(data.shape))
     
     data_to_csv(data, OUT_FILE)
-    print("Saved processed data to {}.".format(OUT_FILE))
+    print("Saved processed resale price data to {}.".format(OUT_FILE))
+    
+    print("Loading and processing raw resale price indices...")
+    resale_price_index = process_raw_resale_price_index_data(BASE_PATH)
+    
+    data_to_csv(resale_price_index, RPI_FILE)
+    print("Saved processed resale price index data to {}.".format(RPI_FILE))

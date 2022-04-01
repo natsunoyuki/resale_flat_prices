@@ -1,6 +1,4 @@
-# Load raw data downloaded from https://data.gov.sg/dataset/resale-flat-prices
-# which comes in several .csv files. Combine these separate .csv files into a
-# single DataFrame.
+# Load processed resale flat price data.
 
 import os
 import pandas as pd
