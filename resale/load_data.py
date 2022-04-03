@@ -12,6 +12,7 @@ SUFFIX = "?raw=true"
 CURR_PATH = os.path.dirname(__file__)
 LOCAL_DATA_DIR = os.path.join(CURR_PATH, "../processed data/")
 
+# Functions for loading resale price data.
 def load_data(online = True, data_dir = DATA_DIR, data_file = DATA_FILE, suffix = SUFFIX,
               local_data_dir = LOCAL_DATA_DIR):
     """
@@ -29,9 +30,9 @@ def load_data(online = True, data_dir = DATA_DIR, data_file = DATA_FILE, suffix 
         except:
             # If not load from local disk.
             print("Error downloading data from GitHub!")
-            data = load_local_data(LOCAL_DATA_DIR + DATA_FILE, "zip")
+            data = load_local_data(local_data_dir + data_file, "zip")
     else:
-        data = load_local_data(LOCAL_DATA_DIR + DATA_FILE, "zip")
+        data = load_local_data(local_data_dir + data_file, "zip")
         
     print("Downloaded data shape: {}.".format(data.shape))
     
@@ -76,3 +77,22 @@ def year_from_month(x):
 def mth_from_month(x):
     # Converts 2017-01 to 1 int format.
     return int(x[5:])
+
+# Functions for loading misc. data such as the resale price index.
+def load_resale_price_index(online = True, data_dir = DATA_DIR, 
+                            data_file = "resale_price_index.csv.zip",
+                            suffix = SUFFIX, local_data_dir = LOCAL_DATA_DIR):
+    if online == True:
+        try:
+            # Try to load from GitHub.
+            print("Downloading resale price indices from GitHub...")
+            rpi = pd.read_csv(data_dir + data_file + suffix, compression = "zip")
+        except:
+            # If not load from local disk.
+            print("Error downloading resale price indices from GitHub!")
+            rpi = load_local_data(local_data_dir + data_file, "zip")
+    else:
+        rpi = load_local_data(local_data_dir + data_file, "zip")
+    
+    rpi["year_month"] = pd.to_datetime(rpi["year_month"])
+    return rpi

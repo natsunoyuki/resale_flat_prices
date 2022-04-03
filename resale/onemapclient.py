@@ -13,9 +13,14 @@
 # We will be deprecating response field of “LONGTITUDE” for “LONGITUDE” in due course.
 # This exercise will impact 3 API services (Search & Reverse-Geocoding).
 
-import json
-from onemapsg import OneMapClient
 import os
+import json
+
+try:
+    from onemapsg import OneMapClient
+except:
+    print("onemapsg not found... Geocoding using OneMapClient will not run!")
+    print("https://pypi.org/project/onemapsg/")
 
 # Fixed constants indicating the location of the credentials.
 CURR_PATH = os.path.dirname(__file__)
