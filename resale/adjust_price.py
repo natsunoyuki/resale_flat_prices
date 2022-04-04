@@ -82,7 +82,10 @@ def adjust_resale_price_by_location(df,
     
     # Build a different linear regression model to update the historical prices 
     # for each location.
+    # Then for each monthly resale price, calculate the required adjustment factor.
+    new_df = [] # More efficient way to concatenate DataFrames is to use lists.
     for location in sorted(df[which].unique()):
+        # 1. Build the adjustment models.
         d, G, m = build_price_adjustment_model(median_prices = median_prices, 
                                                price_column = price_column,
                                                location = location, 
@@ -98,9 +101,8 @@ def adjust_resale_price_by_location(df,
         temporal_models[location]["r2"] = linear_regression.r2(d[price_column].values, G, m)
         temporal_models[location]["N"] = len(median_prices[median_prices[which] == location]) 
         
-    # For each monthly resale price, calculate the required adjustment factor.
-    new_df = []
-    for location in sorted(temporal_models.keys()):
+        # 2. Calculate the adjustments.
+        # TO DO: improve the code here!
         tmp_df = add_price_adjustment_factor(df = df, 
                                              temporal_models = temporal_models, 
                                              location = location,
@@ -108,8 +110,8 @@ def adjust_resale_price_by_location(df,
                                              end_year_month = end_year_month,
                                              vander_order = vander_order, 
                                              which = which)
-        new_df.append(tmp_df)
         
+        new_df.append(tmp_df)
     # This is the more efficient method of concatenating DataFrames...    
     new_df = pd.concat(new_df, ignore_index = True)
     
@@ -253,7 +255,7 @@ def add_price_adjustment_factor(df,
     Outputs
         tmp_df: DataFrame
     """
-    # Use all rows of data...
+    # Use all rows of data without caring about location.
     if which is None:
         tmp_df = df.copy()
         model = temporal_models["model"]
