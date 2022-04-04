@@ -31,7 +31,7 @@ def clean_data(df):
     # 6. Convert "storey_range" from string to numerical values.
     df = clean_storey_range(df)
     
-    # 7. Categorize "flat_model" numerically.
+    # 7. Clean up "flat_model". Nothing much here really...
     df = clean_flat_model(df)
     
     # 8. Normalize "floor_area_sqm".
@@ -240,9 +240,12 @@ def clean_storey_range(df):
 
 # flat_model
 def flat_model_formatter(x):
+    if x == "TYPE S1":
+        pass
     return x
 
 def clean_flat_model(df):
+    # Convert everything to upper case for consistency.
     df["flat_model"] = df["flat_model"].apply(lambda x: x.upper())
     return df
 

@@ -17,7 +17,8 @@ def latlon_to_h3(df, resolution = RESOLUTION):
     Outputs
         df: DataFrame
     """
-    df["h3"] = df.apply(lambda DF: h3.geo_to_h3(DF["latitude"], DF["longitude"], resolution), axis = 1)
+    df["h3"] = df.apply(lambda DF: h3.geo_to_h3(DF["latitude"], DF["longitude"], resolution), 
+                        axis = 1)
     return df
 
 def plot_hexagons(hexagons):

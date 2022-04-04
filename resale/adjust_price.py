@@ -26,7 +26,7 @@ def adjust_resale_price_by_location(df,
                                     price_column = "resale_price", 
                                     start_year_month = None,
                                     next_month = False,
-                                    vander_order = 4,
+                                    vander_order = 4, # 8?
                                     model = "least_squares", 
                                     which = "town",
                                     kwargs = {}):
@@ -221,7 +221,14 @@ def build_price_adjustment_model(median_prices, price_column, location, start_ye
     # best inversion kernel. Note that a 4th order Vander matrix results in a 
     # 3rd order polynomial in the linear regression model.
     # We model the change in the resale price with respect to months.
-    G = np.vander(d["months"].values, vander_order)
+    # P.S. Further studies show that an 8th order Vander matrix might have much
+    # better performance... (i.e. a 7th order polynomial)
+    # Normalize the values of G? In the case of very high order polynomials,
+    # due to the large powers certain columns may blow up to infinity.
+    G = d["months"].values / np.max(d["months"].values)
+    G = np.vander(G, vander_order)
+    
+    # Linear inversion. Nothing complicated. Perhaps in due time a more powerful model?
     m = adjustment_model(G, d[price_column].values)
     return d, G, m
    

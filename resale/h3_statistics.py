@@ -1,11 +1,14 @@
-# h3-py: Uber’s H3 Hexagonal Hierarchical Geospatial Indexing System in Python
+# h3-py: Uber's H3 Hexagonal Hierarchical Geospatial Indexing System in Python
 # https://uber.github.io/h3-py/intro.html
 
 import h3
 import pandas as pd
 
-def get_all_k_ring_monthly_median_price(df, date_column = "year_month", price_column = "resale_price",
-                                        k_ring_distance = 1, h3_column_name = "h3"):
+def get_all_k_ring_monthly_median_price(df, 
+                                        date_column = "year_month", 
+                                        price_column = "resale_price",
+                                        k_ring_distance = 1, 
+                                        h3_column_name = "h3"):
     """
     Gets the k-ring median price for all unique H3 indices in the DataFrame.
     Inputs
@@ -21,19 +24,28 @@ def get_all_k_ring_monthly_median_price(df, date_column = "year_month", price_co
     h3_median_prices = []
     
     for i in range(len(h3_indices)):
-        h3_median_price = get_k_ring_monthly_median_price(df, h3_indices[i], date_column, price_column,
-                                                          k_ring_distance, h3_column_name)
+        # For each unique h3 index in the data, calculate the median price.
+        h3_median_price = get_k_ring_monthly_median_price(df, 
+                                                          h3_indices[i], 
+                                                          date_column, 
+                                                          price_column,
+                                                          k_ring_distance, 
+                                                          h3_column_name)
         h3_median_price[h3_column_name] = h3_indices[i]
         h3_median_prices.append(h3_median_price)
         
     # This is the fast way of DataFrame concatenation.
     return pd.concat(h3_median_prices, ignore_index = True) 
 
-def get_k_ring_monthly_median_price(df, h3_index, date_column = "year_month", price_column = "resale_price",
-                                    k_ring_distance = 1, h3_column_name = "h3"):
+def get_k_ring_monthly_median_price(df, 
+                                    h3_index, 
+                                    date_column = "year_month", 
+                                    price_column = "resale_price",
+                                    k_ring_distance = 1, 
+                                    h3_column_name = "h3"):
     """
-    Certain cells have very few (~2) rows of data. Instead of calculating the median for a single cell,
-    calculate the median for a k-ring of 7 cells instead!
+    Certain cells have very few (~2) rows of data. Instead of calculating 
+    the median for a single cell, calculate the median for a k-ring of 7 cells instead!
     Inputs
         df: DataFrame
         h3_index: string
@@ -98,7 +110,8 @@ def weighted_kring_smoothing(df, hex_col, metric_col, coef):
         temp2[-1]['k'] = k
     df_all = pd.concat(temp2).merge(df)
     df_all[metric_col] = df_all[metric_col]*df_all.k.apply(lambda x:coef[x])
-    dfs = df_all.groupby('hexk')[[metric_col]].sum().reset_index().rename(index=str, columns={"hexk": hex_col})
+    dfs = df_all.groupby('hexk')[[metric_col]].sum().reset_index().rename(index=str, 
+                                                           columns={"hexk": hex_col})
     dfs['lat'] = dfs[hex_col].apply(lambda x: h3.h3_to_geo(x)[0])
     dfs['lng'] = dfs[hex_col].apply(lambda x: h3.h3_to_geo(x)[1])
     return dfs
