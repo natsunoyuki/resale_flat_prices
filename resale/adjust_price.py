@@ -225,7 +225,7 @@ def build_price_adjustment_model(median_prices, price_column, location, start_ye
     # better performance... (i.e. a 7th order polynomial)
     # Normalize the values of G? In the case of very high order polynomials,
     # due to the large powers certain columns may blow up to infinity.
-    G = d["months"].values / np.max(d["months"].values)
+    G = d["months"].values #/ np.max(d["months"].values)
     G = np.vander(G, vander_order)
     
     # Linear inversion. Nothing complicated. Perhaps in due time a more powerful model?
@@ -253,10 +253,11 @@ def add_price_adjustment_factor(df,
     Outputs
         tmp_df: DataFrame
     """
-    # Extract for a particular location.
+    # Use all rows of data...
     if which is None:
         tmp_df = df.copy()
         model = temporal_models["model"]
+    # Or extract for a particular location.
     else:
         tmp_df = df[df[which] == location]
         model = temporal_models[location]["model"]
